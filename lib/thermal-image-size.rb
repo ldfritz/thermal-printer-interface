@@ -47,6 +47,7 @@ class ThermalImageSize
       nh = "00"
       nl = "0" + hex
     end
-    "\\x%s\\x%s" % [nl, nh]
+    nl.to_i(16).chr + nh.to_i(16).chr
+#    "\\x%s\\x%s" % [nl, nh]
   end
 end

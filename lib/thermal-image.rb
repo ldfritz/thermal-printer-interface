@@ -19,18 +19,18 @@ class ThermalImage
     output = ""
     while cursor < @size.bits_in_print_image
       if cursor % @size.bits_in_print_row == 0
-        output << "\\x1b\\x2a\\x21"
+        output << "\x1b".chr << "\x2a".chr << "\x21".chr
         output << @size.print_row_bytes
       end
 
-      output << "\\x%02x" % @array.bits[cursor, 8].join.to_i(2)
+      output << @array.bits[cursor, 8].join.to_i(2).chr
 
       cursor += 8
 
       if cursor % @size.bits_in_print_row == 0
-        output << "\\x0a"
+        output << "\n"
       end
     end
-    output << ("\\x0a" * 4)
+    output << ("\n" * 4)
   end
 end
