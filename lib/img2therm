@@ -1,0 +1,94 @@
+#!/usr/bin/env ruby
+VERSION = "0.1.0"
+
+require "RMagick"
+require "slop"
+opts = Slop.parse!(:help => true) do
+  banner "img2therm [OPTION] SRC DEST"
+  separator "\nOptions:"
+  on "p", "preview", "Preview the black and white resized photo."
+  on "t", "threshold=", "Set the black and white threshold between 0.0-1.0. Default: 0.5", :as => Float
+  on "v", "version", "Print version information and exit." do
+    puts "img2therm v#{VERSION}"
+    exit
+  end
+end
+
+# Ensure that the threshold is between 0.0 and 1.0, if it is set.
+if opts[:threshold] and (opts[:threshold] < 0 or 1 < opts[:threshold])
+  puts opts
+  exit
+end
+# Set the default threshold if necessary.
+@threshold = opts[:threshold] || 0.5
+
+#Ensure that the destination is set.
+if ARGV[0].nil?
+  puts opts
+  exit
+end
+@src = ARGV[0]
+
+# Ensure that the destination is set.
+if ARGV[1].nil?
+  # Unless the preview option is set.
+  unless opts[:preview]
+    puts opts
+    exit
+  end
+end
+@dest = ARGV[1]
+
+# Read the image.
+img = Magick::Image.read(@src)[0]
+# Resize the image.
+if img.columns > 384
+  img = img.resize_to_fit(384)
+end
+# This distorts the picture!
+# But there has to be some way to compensate for a final row
+# that is not 8 pixels tall.
+img = img.resize(img.columns, (img.rows / 24.0).ceil * 24)
+# Convert the image to black and white.
+img = img.threshold(Magick::QuantumRange * (@threshold || 0.5))
+
+# If requested, display the image and exit.
+if opts[:preview]
+  img.display
+  exit
+end
+
+def print_row_bytes(width_in_bits)
+  r = width_in_bits
+  hex = r.to_s(16)
+  if hex.length == 3
+    nh = "0" + hex[0]
+    nl = hex[1,2]
+  elsif hex.length == 2
+    nh = "00"
+    nl = hex
+  elsif hex.length == 1
+    nh = "00"
+    nl = "0" + hex
+  end
+  nl.to_i(16).chr + nh.to_i(16).chr
+end
+
+File.open(@dest, "w") do |file|
+  (img.rows / 24).times do |row|
+    file.print 27.chr
+    file.print 42.chr
+    file.print 33.chr
+    file.print print_row_bytes(img.columns)
+    img.columns.times do |col|
+      3.times do |subrow|
+        chunk = img.get_pixels(col, (24 * row) + (8 * subrow), 1, 8).collect do |pixel|
+          pixel.to_color == "black" ? "1" : "0"
+        end
+        file.print chunk.join.to_i(2).chr
+      end
+    end
+    file.print "\n"
+  end
+  file.print("\n" * 4)
+end
