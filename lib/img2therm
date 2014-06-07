@@ -74,21 +74,28 @@ def print_row_bytes(width_in_bits)
   nl.to_i(16).chr + nh.to_i(16).chr
 end
 
-File.open(@dest, "w") do |file|
-  (img.rows / 24).times do |row|
-    file.print 27.chr
-    file.print 42.chr
-    file.print 33.chr
-    file.print print_row_bytes(img.columns)
-    img.columns.times do |col|
-      3.times do |subrow|
-        chunk = img.get_pixels(col, (24 * row) + (8 * subrow), 1, 8).collect do |pixel|
-          pixel.to_color == "black" ? "1" : "0"
-        end
-        file.print chunk.join.to_i(2).chr
+output = ""
+(img.rows / 24).times do |row|
+  output << 27.chr
+  output << 42.chr
+  output << 33.chr
+    output << print_row_bytes(img.columns)
+  img.columns.times do |col|
+    3.times do |subrow|
+      chunk = img.get_pixels(col, (24 * row) + (8 * subrow), 1, 8).collect do |pixel|
+        pixel.to_color == "black" ? "1" : "0"
       end
+      output << chunk.join.to_i(2).chr
     end
-    file.print "\n"
   end
-  file.print("\n" * 4)
+  output << "\n"
+end
+output <<("\n" * 4)
+
+if @dest == "-"
+  print output
+else
+  File.open(@dest, "w") do |file|
+    file.print output
+  end
 end
