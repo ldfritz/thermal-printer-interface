@@ -1,0 +1,49 @@
+#!/usr/bin/env ruby
+VERSION = "0.1.0"
+APP     = "2therm"
+
+DEVICE  = "/dev/usb/lp0"
+
+# DEVICE CODES
+NORMAL_WIDTH_AND_HEIGHT = [27, 33,  0]
+DOUBLE_HEIGHT           = [27, 33, 16]
+DOUBLE_WIDTH            = [27, 33, 32]
+DOUBLE_WIDTH_AND_HEIGHT = [27, 33, 48]
+
+require "slop"
+opts = Slop.parse!(:help => true) do
+  banner "usage: #{APP} [OPTIONS] TEXT"
+  separator "\n    Quote TEXT to preserve whitespace or\n    enter a dash (-) for standard input."
+  separator "\nOptions:"
+  on "t", "1x2", "Double height of text."
+  on "w", "2x1", "Double width of text. (16 wide)"
+  on "d", "2x2", "Double width and height of text."
+  on "v", "version", "Print version information and exit." do
+    puts "#{APP} v#{VERSION}"
+    exit
+  end
+end
+
+txt = ARGV[0] == "-" ? STDIN.read : ARGV.join(" ")
+
+File.open(DEVICE, "w") do |dev|
+  if opts["1x2"] or opts["2x1"] or opts["2x2"]
+    if opts["2x2"] or (opts["1x2"] and opts["2x1"])
+      DOUBLE_WIDTH_AND_HEIGHT
+    elsif opts["1x2"]
+      DOUBLE_HEIGHT
+    elsif opts["2x1"]
+      DOUBLE_WIDTH
+    end.each do |ch|
+      dev.write ch.chr
+    end
+  end
+
+  dev.puts txt
+
+  if opts["1x2"] or opts["2x1"] or opts["2x2"]
+    NORMAL_WIDTH_AND_HEIGHT.each do |ch|
+      dev.write ch.chr
+    end
+  end
+end
