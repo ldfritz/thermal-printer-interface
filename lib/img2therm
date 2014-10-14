@@ -43,7 +43,7 @@ end
 img = Magick::Image.read(@src)[0]
 # Resize the image.
 if img.columns > 384
-  img = img.resize_to_fit(384)
+  img = img.resize(384.0/img.columns)
 end
 # This distorts the picture!
 # But there has to be some way to compensate for a final row
@@ -54,6 +54,9 @@ img = img.threshold(Magick::QuantumRange * (@threshold || 0.5))
 
 # If requested, display the image and exit.
 if opts[:preview]
+  unless ARGV[1].nil?
+    puts "#{ARGV[1]} not written"
+  end
   img.display
   exit
 end
