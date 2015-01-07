@@ -1,8 +1,10 @@
 #!/usr/bin/env ruby
 VERSION = "0.1.0"
-APP     = "2therm"
+APP     = "txt2therm"
 
-DEVICE  = "/dev/usb/lp0"
+dir = "/dev/usb"
+dev = Dir.entries(dir).find_all {|i| i =~ /^lp/ }.first
+DEVICE = "%s/%s" % [dir, dev]
 
 # DEVICE CODES
 NORMAL_WIDTH_AND_HEIGHT = [27, 33,  0]
@@ -13,18 +15,33 @@ DOUBLE_WIDTH_AND_HEIGHT = [27, 33, 48]
 require "slop"
 opts = Slop.parse!(:help => true) do
   banner "usage: #{APP} [OPTIONS] TEXT"
-  separator "\n    Quote TEXT to preserve whitespace or\n    enter a dash (-) for standard input."
+  separator "
+Send text to the thermal printer.
+
+Quote TEXT to preserve whitespace or
+enter a dash (-) for standard input."
+
   separator "\nOptions:"
-  on "t", "1x2", "Double height of text."
+  on "f", "file=", "Print file."
+  on "t", "1x2", "Double height of text. (32 wide)"
   on "w", "2x1", "Double width of text. (16 wide)"
-  on "d", "2x2", "Double width and height of text."
+  on "d", "2x2", "Double width and height of text. (16 wide)"
   on "v", "version", "Print version information and exit." do
     puts "#{APP} v#{VERSION}"
     exit
   end
 end
 
-txt = ARGV[0] == "-" ? STDIN.read : ARGV.join(" ")
+txt = ""
+if opts["file"]
+  if File.exist?(opts["file"])
+    txt = File.read(opts["file"])
+  else
+    put opts
+  end
+else
+  txt = ARGV[0] == "-" ? STDIN.read : ARGV.join(" ")
+end
 
 File.open(DEVICE, "w") do |dev|
   if opts["1x2"] or opts["2x1"] or opts["2x2"]
