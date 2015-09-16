@@ -2,9 +2,26 @@
 VERSION = "0.1.0"
 APP     = "txt2therm"
 
+trap("INT", "EXIT")
+
 dir = "/dev/usb"
 dev = Dir.entries(dir).find_all {|i| i =~ /^lp/ }.first
-DEVICE = "%s/%s" % [dir, dev]
+if dev
+  DEVICE = "%s/%s" % [dir, dev]
+else
+  puts "printer not found"
+  exit
+end
+
+unless File.writable?(DEVICE)
+  puts "enter password to activate printer"
+  require 'open3'
+  if Open3.capture2("sudo echo success")[0] == "success\n"
+    system("sudo chmod 666 #{DEVICE}")
+  else
+    puts "invalid password"
+  end
+end
 
 # DEVICE CODES
 NORMAL_WIDTH_AND_HEIGHT = [27, 33,  0]
