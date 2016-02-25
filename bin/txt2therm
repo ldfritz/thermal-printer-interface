@@ -1,7 +1,8 @@
 #!/usr/bin/env ruby
-require "optparse"
-VERSION = "0.1.1"
 
+VERSION = "dev"
+
+require "optparse"
 opts = {}
 OptionParser.new do |options|
   options.banner = "usage: txt2therm [OPTIONS] [FILE]"
@@ -24,34 +25,13 @@ OptionParser.new do |options|
   end
 
   options.on("-v", "--version", "Print version information and exit.") do
-    puts "txt2therm test-version"
+    puts "txt2therm #{VERSION}"
     exit
   end
 end.parse!
 
 trap("INT", "EXIT")
 
-dir = "/dev/usb"
-dev = Dir.entries(dir).find_all {|i| i =~ /^lp/ }.first
-
-if dev
-  DEVICE = "%s/%s" % [dir, dev]
-else
-  puts "printer not found"
-  exit
-end
-
-unless File.writable?(DEVICE)
-  puts "enter password to activate printer"
-  require 'open3'
-  if Open3.capture2("sudo echo success")[0] == "success\n"
-    system("sudo chmod 666 #{DEVICE}")
-  else
-    puts "invalid password"
-  end
-end
-
-# DEVICE CODES
 NORMAL_WIDTH_AND_HEIGHT = [27, 33,  0]
 DOUBLE_HEIGHT           = [27, 33, 16]
 DOUBLE_WIDTH            = [27, 33, 32]
@@ -63,7 +43,15 @@ else
   STDIN.read
 end
 
-File.open(DEVICE, "w") do |dev|
+project_folder = File.dirname(File.dirname(File.realpath($0)))
+require_relative "#{project_folder}/lib/thermal_printer.rb"
+
+unless ThermalPrinter.activate
+  puts "error activating printer"
+  exit
+end
+
+File.open(ThermalPrinter.location, "w") do |dev|
   if opts["1x2"] or opts["2x1"] or opts["2x2"]
     if opts["2x2"] or (opts["1x2"] and opts["2x1"])
       DOUBLE_WIDTH_AND_HEIGHT
