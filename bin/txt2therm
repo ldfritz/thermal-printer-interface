@@ -49,7 +49,7 @@ end
 
 # Add sizing escapes to the text, if necessary.
 if opts["text_size"]
-  text = ThermalPrinter.format_text(input, opts["text_size"])
+  text = ThermalPrinter.format_text(text, opts["text_size"])
 end
 
 # Send the text to the printer.
