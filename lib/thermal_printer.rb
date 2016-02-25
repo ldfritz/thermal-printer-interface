@@ -4,6 +4,32 @@ module ThermalPrinter
   DOUBLE_WIDTH            = "\e! "    # [27, 33, 32]
   DOUBLE_WIDTH_AND_HEIGHT = "\e!0"    # [27, 33, 48]
 
+  # Activate the printer.  (This may require user input.)
+  def self.activate!
+    if File.writable?(ThermalPrinter.location)
+      true
+    else
+      puts "enter password to activate printer"
+      command = "sudo chmod 666 #{ThermalPrinter.location} && echo success"
+      require "open3"
+      if Open3.capture2(command)[0] == "success\n"
+        true
+      else
+        puts "error activating printer"
+        exit
+      end
+    end
+  end
+
+  # Add sizing escapes to the content.
+  def self.format_text(content, text_size=false)
+    if text_size
+      content = text_size + content + ThermalPrinter::NORMAL_WIDTH_AND_HEIGHT
+    end
+    content
+  end
+
+  # Return (or detect) the path of the printer.
   def self.location
     return @location if @location
     device_folder = "/dev/usb"
@@ -15,22 +41,9 @@ module ThermalPrinter
     end
   end
 
-  def self.activate
-    if File.writable?(ThermalPrinter.location)
-      true
-    else
-      puts "enter password to activate printer"
-      command = "sudo chmod 666 #{ThermalPrinter.location} && echo success"
-      require "open3"
-      Open3.capture2(command)[0] == "success\n"
-    end
-  end
-
-  def self.write_text(content, text_size=false)
-    File.open(ThermalPrinter.location, "w") do |printer|
-      printer.write text_size if text_size
-      printer.puts input
-      printer.write ThermalPrinter::NORMAL_WIDTH_AND_HEIGHT if text_size
-    end
+  # Send text to the printer.
+  def self.write(content)
+    ThermalPrinter.activate!
+    File.open(ThermalPrinter.location, "w") {|printer| printer.puts content }
   end
 end
