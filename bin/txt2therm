@@ -1,17 +1,19 @@
 #!/usr/bin/env ruby
 VERSION = "dev"
 
+# Require the necessary files.
 require "optparse"
 project_folder = File.dirname(File.dirname(File.realpath($0)))
 require_relative "#{project_folder}/lib/thermal_printer.rb"
 
+# Setup and parse the options.
 opts = {}
 OptionParser.new do |options|
   options.banner = "usage: txt2therm [OPTIONS] [FILE]"
   options.separator "\nSend text to the thermal printer."
   options.separator "\nOptions:"
 
-  options.on("-t", "--1x2", "Double height of text. (32 wide)") do |v|
+  options.on("-t", "--tall", "Double height of text. (32 characters wide)") do |v|
     if opts["text_size"]
       opts["text_size"] = ThermalPrinter::DOUBLE_WIDTH_AND_HEIGHT
     else
@@ -19,7 +21,7 @@ OptionParser.new do |options|
     end
   end
 
-  options.on("-w", "--2x1", "Double width of text. (16 wide)") do |v|
+  options.on("-w", "--wide", "Double width of text. (16 characters wide)") do |v|
     if opts["text_size"]
       opts["text_size"] = ThermalPrinter::DOUBLE_WIDTH_AND_HEIGHT
     else
@@ -27,7 +29,7 @@ OptionParser.new do |options|
     end
   end
 
-  options.on("-d", "--2x2", "Double width and height of text. (16 wide)") do |v|
+  options.on("-d", "--double", "Double width and height of text. (16 characters wide)") do |v|
     opts["text_size"] = ThermalPrinter::DOUBLE_WIDTH_AND_HEIGHT
   end
 
@@ -37,17 +39,18 @@ OptionParser.new do |options|
   end
 end.parse!
 
-trap("INT", "EXIT")
-
-unless ThermalPrinter.activate
-  puts "error activating printer"
-  exit
-end
-
-input = if ARGV[0]
-  File.read(ARGV[0]) if File.exist?(ARGV[0])
+# Read text from file or capture standard input (which could be piped).
+text = if ARGV[0] and File.exist?(ARGV[0])
+  File.read(ARGV[0])
 else
+  trap("INT", "EXIT")
   STDIN.read
 end
 
-ThermalPrinter.write_text(input, opts["text_size"])
+# Add sizing escapes to the text, if necessary.
+if opts["text_size"]
+  text = ThermalPrinter.format_text(input, opts["text_size"])
+end
+
+# Send the text to the printer.
+ThermalPrinter.write(text)
