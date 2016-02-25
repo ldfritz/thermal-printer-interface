@@ -25,4 +25,12 @@ module ThermalPrinter
       Open3.capture2(command)[0] == "success\n"
     end
   end
+
+  def self.write_text(content, text_size=false)
+    File.open(ThermalPrinter.location, "w") do |printer|
+      printer.write text_size if text_size
+      printer.puts input
+      printer.write ThermalPrinter::NORMAL_WIDTH_AND_HEIGHT if text_size
+    end
+  end
 end

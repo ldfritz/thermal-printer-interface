@@ -45,24 +45,4 @@ else
   STDIN.read
 end
 
-File.open(ThermalPrinter.location, "w") do |printer|
-  if opts["1x2"] or opts["2x1"] or opts["2x2"]
-    if opts["2x2"] or (opts["1x2"] and opts["2x1"])
-      ThermalPrinter::DOUBLE_WIDTH_AND_HEIGHT
-    elsif opts["1x2"]
-      ThermalPrinter::DOUBLE_HEIGHT
-    elsif opts["2x1"]
-      ThermalPrinter::DOUBLE_WIDTH
-    end.each do |ch|
-      printer.write ch.chr
-    end
-  end
-
-  printer.puts input
-
-  if opts["1x2"] or opts["2x1"] or opts["2x2"]
-    ThermalPrinter::NORMAL_WIDTH_AND_HEIGHT.each do |ch|
-      printer.write ch.chr
-    end
-  end
-end
+ThermalPrinter.write_text(input, opts["text_size"])
