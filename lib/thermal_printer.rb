@@ -1,8 +1,8 @@
 module ThermalPrinter
-  NORMAL_WIDTH_AND_HEIGHT = [27, 33,  0]
-  DOUBLE_HEIGHT           = [27, 33, 16]
-  DOUBLE_WIDTH            = [27, 33, 32]
-  DOUBLE_WIDTH_AND_HEIGHT = [27, 33, 48]
+  NORMAL_WIDTH_AND_HEIGHT = "\e!\x00" # [27, 33,  0]
+  DOUBLE_HEIGHT           = "\e!\x10" # [27, 33, 16]
+  DOUBLE_WIDTH            = "\e! "    # [27, 33, 32]
+  DOUBLE_WIDTH_AND_HEIGHT = "\e!0"    # [27, 33, 48]
 
   def self.location
     return @location if @location
