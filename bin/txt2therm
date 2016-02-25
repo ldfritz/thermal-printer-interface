@@ -2,6 +2,33 @@
 require "optparse"
 VERSION = "0.1.1"
 
+opts = {}
+OptionParser.new do |options|
+  options.banner = "usage: txt2therm [OPTIONS] [FILE]"
+  options.separator "\nSend text to the thermal printer."
+  options.separator "\nOptions:"
+
+  options.on("-t", "--1x2", "Double height of text. (32 wide)") do |v|
+    opts["t"] = true
+    opts["1x2"] = true
+  end
+
+  options.on("-w", "--2x1", "Double width of text. (16 wide)") do |v|
+    opts["w"] = true
+    opts["2x1"] = true
+  end
+
+  options.on("-d", "--2x2", "Double width and height of text. (16 wide)") do |v|
+    opts["d"] = true
+    opts["2x2"] = true
+  end
+
+  options.on("-v", "--version", "Print version information and exit.") do
+    puts "txt2therm test-version"
+    exit
+  end
+end.parse!
+
 trap("INT", "EXIT")
 
 dir = "/dev/usb"
@@ -29,33 +56,6 @@ NORMAL_WIDTH_AND_HEIGHT = [27, 33,  0]
 DOUBLE_HEIGHT           = [27, 33, 16]
 DOUBLE_WIDTH            = [27, 33, 32]
 DOUBLE_WIDTH_AND_HEIGHT = [27, 33, 48]
-
-opts = {}
-OptionParser.new do |options|
-  options.banner = "usage: txt2therm [OPTIONS] [FILE]"
-  options.separator "\nSend text to the thermal printer."
-  options.separator "\nOptions:"
-
-  options.on("-t", "--1x2", "Double height of text. (32 wide)") do |v|
-    opts["t"] = true
-    opts["1x2"] = true
-  end
-
-  options.on("-w", "--2x1", "Double width of text. (16 wide)") do |v|
-    opts["w"] = true
-    opts["2x1"] = true
-  end
-
-  options.on("-d", "--2x2", "Double width and height of text. (16 wide)") do |v|
-    opts["d"] = true
-    opts["2x2"] = true
-  end
-
-  options.on("-v", "--version", "Print version information and exit.") do
-    puts "txt2therm test-version"
-    exit
-  end
-end.parse!
 
 txt = if ARGV[0]
   File.read(ARGV[0]) if File.exist?(ARGV[0])
