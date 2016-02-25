@@ -2,6 +2,9 @@
 VERSION = "dev"
 
 require "optparse"
+project_folder = File.dirname(File.dirname(File.realpath($0)))
+require_relative "#{project_folder}/lib/thermal_printer.rb"
+
 opts = {}
 OptionParser.new do |options|
   options.banner = "usage: txt2therm [OPTIONS] [FILE]"
@@ -9,18 +12,23 @@ OptionParser.new do |options|
   options.separator "\nOptions:"
 
   options.on("-t", "--1x2", "Double height of text. (32 wide)") do |v|
-    opts["t"] = true
-    opts["1x2"] = true
+    if opts["text_size"]
+      opts["text_size"] = ThermalPrinter::DOUBLE_WIDTH_AND_HEIGHT
+    else
+      opts["text_size"] = ThermalPrinter::DOUBLE_HEIGHT
+    end
   end
 
   options.on("-w", "--2x1", "Double width of text. (16 wide)") do |v|
-    opts["w"] = true
-    opts["2x1"] = true
+    if opts["text_size"]
+      opts["text_size"] = ThermalPrinter::DOUBLE_WIDTH_AND_HEIGHT
+    else
+      opts["text_size"] = ThermalPrinter::DOUBLE_WIDTH
+    end
   end
 
   options.on("-d", "--2x2", "Double width and height of text. (16 wide)") do |v|
-    opts["d"] = true
-    opts["2x2"] = true
+    opts["text_size"] = ThermalPrinter::DOUBLE_WIDTH_AND_HEIGHT
   end
 
   options.on("-v", "--version", "Print version information and exit.") do
@@ -30,9 +38,6 @@ OptionParser.new do |options|
 end.parse!
 
 trap("INT", "EXIT")
-
-project_folder = File.dirname(File.dirname(File.realpath($0)))
-require_relative "#{project_folder}/lib/thermal_printer.rb"
 
 unless ThermalPrinter.activate
   puts "error activating printer"
